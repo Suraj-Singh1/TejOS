@@ -212,13 +212,10 @@ function Resolve-ImageIndex {
     $validIndices = $images.ImageIndex
     
     if ($INDEX -eq 0) {
-        Write-Host "Initializing sequence $(Get-Random -Minimum 1000 -Maximum 9999)..." -ForegroundColor Cyan
-        Write-Host "Initializing sequence $(Get-Random -Minimum 1000 -Maximum 9999)..." -ForegroundColor Cyan
-        Write-Host "Initializing sequence $(Get-Random -Minimum 1000 -Maximum 9999)..." -ForegroundColor Cyan
-        Write-Host "Initializing sequence $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Host "HALTING. INDEX SELECTION REQUIRED:" -ForegroundColor Cyan
         Write-Host ""
         foreach ($img in $images) {
-            Write-Host "Initializing sequence $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Host "IDX: $($img.ImageIndex) | VOL: $($img.ImageName)"
         }
         Write-Host ""
         $choice = Read-Host "Enter the index number"
@@ -1712,6 +1709,7 @@ try {
 
     exit 1
 }
+
 
 
 
