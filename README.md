@@ -7,7 +7,7 @@
   <p>
     <img src="https://img.shields.io/badge/PowerShell-5391FE?style=for-the-badge&logo=powershell&logoColor=white" alt="PowerShell" />
     <img src="https://img.shields.io/badge/Platform-Windows%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 11" />
-    <img src="https://img.shields.io/github/stars/Suraj-Singh1/TejOS?style=for-the-badge&color=gold" alt="GitHub Stars" />
+  
   </p>
 </div>
 
