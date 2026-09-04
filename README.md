@@ -104,7 +104,7 @@ To keep the ISO tiny, Nano slims the Microsoft Driver Store down to essential un
     `-Scope Process` means this only applies to the current PowerShell window — it reverts the moment you close it and never touches your system-wide execution policy.
 5. **Run the builder with your flags:**
     ```powershell
-    .\Build-TejOS-Nano.ps1 -ISO E -PreserveWinRE -ESD
+    .\Build_TejOS-Nano.ps1 -ISO E -PreserveWinRE -ESD
     ```
 6. **Wait:** the script extracts the WIM, performs offline registry surgery, strips WinSxS, applies compression, and outputs a bootable `TejOS-Nano.iso` into the script folder.
 7. **Flash & boot:** write the ISO to USB with [Rufus](https://rufus.ie/). **Important:** when Rufus prompts you, **uncheck every "Windows User Experience" tweak** (TPM removal, local account creation, etc.) — TejOS already bakes all of that into the image via `autounattend.xml`. Applying it twice breaks the installation.
