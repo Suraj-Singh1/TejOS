@@ -26,9 +26,9 @@ param (
 
 
 
-Write-Host "Initializing sequence $(Get-Random -Minimum 1000 -Maximum 9999)..." -ForegroundColor Cyan
-Write-Host "Initializing sequence $(Get-Random -Minimum 1000 -Maximum 9999)..." -ForegroundColor Cyan
-Write-Host "Initializing sequence $(Get-Random -Minimum 1000 -Maximum 9999)..." -ForegroundColor Cyan
+Write-Host "=========================================" -ForegroundColor Cyan
+Write-Host "      TejOS Nano Builder" -ForegroundColor Cyan
+Write-Host "=========================================" -ForegroundColor Cyan
 
 $global:RemoveDefender = $true
 $global:RemoveEdgeAndOneDrive = $true
@@ -78,12 +78,12 @@ function Set-RegistryValue {
             $output = & 'reg' 'add' $path '/ve' '/t' $type '/d' $value '/f' 2>&1
         }
         if ($LASTEXITCODE -ne 0) {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+            Write-Log "WARN setting registry $path\$name : $output" "WARN"
         } else {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Set registry: $path\$name = $value"
         }
     } catch {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "WARN setting registry $path\$name : $_" "WARN"
     }
 }
 
@@ -91,9 +91,9 @@ function Remove-RegistryKey {
     param([string]$path)
     try {
         & 'reg' 'delete' $path '/f' 2>&1 | Out-Null
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Removed registry key: $path"
     } catch {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "Registry key not found or error: $path" "WARN"
     }
 }
 
@@ -104,68 +104,68 @@ function Remove-RegistryValue {
     param([string]$path)
     $lastSlash = $path.LastIndexOf('\')
     if ($lastSlash -lt 0) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "Invalid registry value path (missing key\value separator): $path" "WARN"
         return
     }
     $keyPath = $path.Substring(0, $lastSlash)
     $valueName = $path.Substring($lastSlash + 1)
     try {
         & 'reg' 'delete' $keyPath '/v' $valueName '/f' 2>&1 | Out-Null
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Removed registry value: $path"
     } catch {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "Registry value not found or error: $path" "WARN"
     }
 }
 
 function Test-Prerequisites {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Initiating environmental compliance checks..."
 
     $myWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
     $myWindowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($myWindowsID)
     $adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
 
     if (-not $myWindowsPrincipal.IsInRole($adminRole)) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "ERROR"
+        Write-Log "Script must run as Administrator!" "ERROR"
         throw "Administrative privileges required"
     }
 
     if (-not (Test-Path "$DriveLetter\sources\boot.wim")) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "ERROR"
+        Write-Log "boot.wim not found at $DriveLetter\sources\" "ERROR"
         throw "Invalid Windows 11 ISO mount point"
     }
 
     if (-not (Test-Path "$DriveLetter\sources\install.wim") -and -not (Test-Path "$DriveLetter\sources\install.esd")) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "ERROR"
+        Write-Log "No install.wim or install.esd found" "ERROR"
         throw "Windows installation files not found"
     }
 
     $disk = Get-PSDrive -Name $ScratchDisk[0] -ErrorAction SilentlyContinue
     if ($disk) {
         $freeGB = [math]::Round($disk.Free / 1GB, 2)
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Available space on ${ScratchDisk}: ${freeGB}GB"
         if ($freeGB -lt 30) {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+            Write-Log "Low disk space warning: ${freeGB}GB (30GB+ recommended for Nano build)" "WARN"
         }
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Prerequisites check passed"
 }
 
 function Initialize-Directories {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Injecting temporary heuristics bypass for active workspace..."
     Add-MpPreference -ExclusionPath $PSScriptRoot -ErrorAction SilentlyContinue
     if ($ScratchDisk -ne $PSScriptRoot) {
         Add-MpPreference -ExclusionPath $ScratchDisk -ErrorAction SilentlyContinue
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Provisioning workspace directory structures..."
     New-Item -ItemType Directory -Force -Path "$nano11Dir\sources" | Out-Null
     New-Item -ItemType Directory -Force -Path $scratchDir | Out-Null
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Directory scaffolding complete."
 }
 
 function Convert-ESDToWIM {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Initiating ESD cryptographic decryption and WIM conversion..."
 
     $esdPath = "$DriveLetter\sources\install.esd"
     $tempWimPath = "$nano11Dir\sources\install.wim"
@@ -174,30 +174,30 @@ function Convert-ESDToWIM {
     $validIndices = $images.ImageIndex
 
     if ($INDEX -notin $validIndices) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "ERROR"
+        Write-Log "Invalid index $INDEX. Available: $($validIndices -join ', ')" "ERROR"
         throw "Image index $INDEX not found in install.esd"
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Exporting image index $INDEX from ESD (this may take 10-20 minutes)..."
     Export-WindowsImage -SourceImagePath $esdPath -SourceIndex $INDEX `
         -DestinationImagePath $tempWimPath -CompressionType Maximum -CheckIntegrity
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Extraction and conversion algorithms complete."
 }
 
 function Copy-WindowsFiles {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Mirroring foundational installation media payload..."
     Copy-Item -Path "$DriveLetter\*" -Destination $nano11Dir -Recurse -Force -ErrorAction SilentlyContinue
 
     if (Test-Path "$nano11Dir\sources\install.esd") {
         Remove-Item "$nano11Dir\sources\install.esd" -Force -ErrorAction SilentlyContinue
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Media payload mirroring finalized."
 }
 
 function Resolve-ImageIndex {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Enumerating WIM volume index descriptors..."
     
     $sourceImagePath = ""
     if (Test-Path "$DriveLetter\sources\install.wim") {
@@ -212,16 +212,19 @@ function Resolve-ImageIndex {
     $validIndices = $images.ImageIndex
     
     if ($INDEX -eq 0) {
-        Write-Host "HALTING. INDEX SELECTION REQUIRED:" -ForegroundColor Cyan
+        Write-Host "=========================================" -ForegroundColor Cyan
+        Write-Host "      Windows Edition Selection" -ForegroundColor Cyan
+        Write-Host "=========================================" -ForegroundColor Cyan
+        Write-Host "Please select the Windows edition to build upon:"
         Write-Host ""
         foreach ($img in $images) {
-            Write-Host "IDX: $($img.ImageIndex) | VOL: $($img.ImageName)"
+            Write-Host "[$($img.ImageIndex)] $($img.ImageName)"
         }
         Write-Host ""
         $choice = Read-Host "Enter the index number"
         if ([int]::TryParse($choice, [ref]$script:INDEX)) {
             if ($script:INDEX -notin $validIndices) {
-                Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "ERROR"
+                Write-Log "Invalid index $script:INDEX." "ERROR"
                 throw "User selected an invalid index."
             }
         } else {
@@ -229,15 +232,15 @@ function Resolve-ImageIndex {
         }
     } else {
         if ($INDEX -notin $validIndices) {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "ERROR"
-            $images | ForEach-Object { Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." }
+            Write-Log "Invalid index $INDEX. Available indices:" "ERROR"
+            $images | ForEach-Object { Write-Log "  Index $($_.ImageIndex): $($_.ImageName)" }
             throw "Image index $INDEX not found"
         }
         $script:INDEX = $INDEX
     }
     
     $selectedImage = $images | Where-Object { $_.ImageIndex -eq $script:INDEX }
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Selected: Index $script:INDEX - $($selectedImage.ImageName)"
 
     $script:DetectedImageName = $selectedImage.ImageName
     $script:DetectedFullVersion = ""
@@ -246,33 +249,33 @@ function Resolve-ImageIndex {
         if ($detailedImage -and ($detailedImage.PSObject.Properties.Match('Version').Count -gt 0)) {
             $script:DetectedFullVersion = $detailedImage.Version
         } else {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+            Write-Log "Detailed image query for index $script:INDEX returned no 'Version' property." "WARN"
         }
     } catch {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "Failed to query detailed image info for build number detection: $_" "WARN"
     }
 
     if ($script:DetectedFullVersion -match '(\d+\.\d+)$') {
         $script:DetectedBuildNumber = $Matches[1]
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Detected Windows build number: $script:DetectedBuildNumber (full version: $script:DetectedFullVersion)"
     } else {
         $script:DetectedBuildNumber = ""
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "Could not parse a build number from image version '$script:DetectedFullVersion'" "WARN"
     }
 }
 
 function Mount-WindowsImageFile {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Initializing WIM filter driver and mounting filesystem image..."
     & takeown /F $wimFilePath /A | Out-Null
     & icacls $wimFilePath /grant "$($adminGroup.Value):(F)" | Out-Null
     Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
 
     & dism /English "/mount-image" "/imagefile:$wimFilePath" "/index:$INDEX" "/mountdir:$scratchDir"
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Filesystem image dynamically linked to workspace."
 }
 
 function Take-OwnershipOfFolders {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Overriding NT AUTHORITY file locking permissions..."
     
     $foldersToOwn = @(
         "$scratchDir\Windows\System32\DriverStore\FileRepository",
@@ -298,7 +301,7 @@ function Take-OwnershipOfFolders {
     
     foreach ($folder in $foldersToOwn) {
         if (Test-Path $folder) {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Taking ownership: $folder"
             & takeown.exe /F $folder /R /D Y 2>$null | Out-Null
             & icacls.exe $folder /grant "$($adminGroup.Value):(F)" /T /C 2>$null | Out-Null
         }
@@ -306,25 +309,25 @@ function Take-OwnershipOfFolders {
     
     foreach ($file in $filesToOwn) {
         if (Test-Path $file) {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Taking ownership: $file"
             & takeown.exe /F $file 2>$null | Out-Null
             & icacls.exe $file /grant "$($adminGroup.Value):(F)" /C 2>$null | Out-Null
         }
     }
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "ACL override operations complete."
 }
 
 function Get-ImageMetadata {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Parsing OS image localization parameters..."
 
     $imageIntl = & dism /English /Get-Intl "/Image:$scratchDir"
     $languageLine = $imageIntl -split '\n' | Where-Object { $_ -match 'Default system UI language : ([a-zA-Z]{2}-[a-zA-Z]{2})' }
 
     if ($languageLine) {
         $script:languageCode = $Matches[1]
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Language: $script:languageCode"
     } else {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "Language code not found, using default" "WARN"
         $script:languageCode = "en-US"
     }
 
@@ -337,19 +340,19 @@ function Get-ImageMetadata {
             if ($script:architecture -eq 'x64') {
                 $script:architecture = 'amd64'
             }
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Architecture: $script:architecture"
             break
         }
     }
 
     if (-not $script:architecture) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "Architecture not found, defaulting to amd64" "WARN"
         $script:architecture = 'amd64'
     }
 }
 
 function Remove-BloatwareApps {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Removing provisioned appx packages (Nano List)..."
 
     $packagesToRemove = Get-AppxProvisionedPackage -Path $scratchDir | Where-Object {
         $name = $_.PackageName
@@ -412,16 +415,16 @@ function Remove-BloatwareApps {
 
     $removeCount = 0
     foreach ($package in $packagesToRemove) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Removing: $($package.DisplayName)"
         try {
             Remove-AppxProvisionedPackage -Path $scratchDir -PackageName $package.PackageName -ErrorAction Stop | Out-Null
             $removeCount++
         } catch {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+            Write-Log "Could not remove $($package.DisplayName): $($_.Exception.Message)" "WARN"
         }
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Purging orphaned Appx sandbox directories..."
     foreach ($package in $packagesToRemove) {
         $folderPath = Join-Path "$scratchDir\Program Files\WindowsApps" $package.PackageName
         if (Test-Path $folderPath) {
@@ -429,11 +432,11 @@ function Remove-BloatwareApps {
         }
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Removed $removeCount appx packages"
 }
 
 function Remove-SystemPackages {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Removing system packages (Nano List)..."
 
     $packagePatterns = @(
         "Microsoft-Windows-LanguageFeatures-Handwriting-$($script:languageCode)-Package~",
@@ -475,29 +478,29 @@ function Remove-SystemPackages {
         foreach ($package in $packagesToRemove) {
             $packageIdentity = ($package -split "\s+")[0]
             if ($packageIdentity) {
-                Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+                Write-Log "Removing package: $packageIdentity"
                 & dism /image:$scratchDir /Remove-Package /PackageName:$packageIdentity /Quiet /NoRestart 2>$null | Out-Null
                 $removeCount++
             }
         }
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Removed $removeCount system packages"
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Removing Extended Wallpaper FoD Package to kill extra themes..."
     & dism.exe /Image:"$scratchDir" /Remove-Package /PackageName:Microsoft-Windows-Wallpaper-Content-Extended-FoD-Package~31bf3856ad364e35~amd64~~10.0.26100.1 /NoRestart 2>$null | Out-Null
     & dism.exe /Image:"$scratchDir" /Remove-Package /PackageName:Microsoft-Windows-Wallpaper-Content-Extended-FoD-Package~31bf3856ad364e35~amd64~~10.0.29648.1000 /NoRestart 2>$null | Out-Null
 }
 
 function Remove-NativeImages {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Demolishing pre-compiled CLR native image caches..."
     $nativeImagesPath = "$scratchDir\Windows\assembly\NativeImages_*"
     Remove-Item -Path $nativeImagesPath -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "CLR native image caches demolished."
 }
 
 function Slim-DriverStore {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Trimming DriverStore repository and purging OEM telemetry..."
     
     $driverRepo = "$scratchDir\Windows\System32\DriverStore\FileRepository"
     
@@ -525,7 +528,7 @@ function Slim-DriverStore {
 
         foreach ($pattern in $patternsToRemove) {
             if ($driverFolder -like $pattern) {
-                Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+                Write-Log "Removing driver: $driverFolder"
                 Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
                 $removeCount++
                 break
@@ -533,24 +536,24 @@ function Slim-DriverStore {
         }
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Removed $removeCount driver packages"
 }
 
 function Reduce-Fonts {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Sanitizing TrueType font payload allocations..."
     
     $fontsPath = "$scratchDir\Windows\Fonts"
     if (Test-Path $fontsPath) {
 
         Get-ChildItem -Path $fontsPath -Exclude "segoe*.*", "tahoma*.*", "marlett.ttf", "8541oem.fon", "segui*.*", "consol*.*", "lucon*.*", "calibri*.*", "arial*.*", "times*.*", "cou*.*", "8*.*", "nirmala*.*", "mangal*.*", "mingli*", "msjh*", "msyh*", "malgun*", "meiryo*", "yugoth*" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
     }
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Font payload sanitized."
 }
 
 
 
 function Remove-MiscellaneousFiles {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Executing targeted Win32 file structural demolition..."
     
     Remove-Item -Path "$scratchDir\Windows\Speech" -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item -Path "$scratchDir\ProgramData\Microsoft\Windows\WER" -Recurse -Force -ErrorAction SilentlyContinue
@@ -563,23 +566,23 @@ function Remove-MiscellaneousFiles {
     Remove-Item -Path "$scratchDir\Windows\Help" -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item -Path "$scratchDir\Windows\Cursors" -Recurse -Force -ErrorAction SilentlyContinue
     
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Obliterating servicing stack binaries and Windows Update orchestrator..."
     Remove-Item -Path "$scratchDir\Windows\System32\usoclient.exe" -Force -ErrorAction SilentlyContinue
     Remove-Item -Path "$scratchDir\Windows\System32\UsoApiAll.dll" -Force -ErrorAction SilentlyContinue
     Remove-Item -Path "$scratchDir\Windows\System32\UsoApi.dll" -Force -ErrorAction SilentlyContinue
     Remove-Item -Path "$scratchDir\Windows\System32\UpdatePolicy.dll" -Force -ErrorAction SilentlyContinue
     Remove-Item -Path "$scratchDir\Windows\SoftwareDistribution" -Recurse -Force -ErrorAction SilentlyContinue
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Win32 structural demolition complete."
 }
 
 function Remove-EdgeAndOneDrive {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Removing Microsoft Edge and OneDrive..."
 
     Remove-Item -Path "$scratchDir\Program Files (x86)\Microsoft\Edge*" -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item -Path "$scratchDir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force -ErrorAction SilentlyContinue
     
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Removing Remote Desktop Client (mstsc)..."
     $mstscPaths = @(
         "$scratchDir\Windows\System32\mstsc.exe",
         "$scratchDir\Windows\System32\mstscax.dll",
@@ -594,30 +597,30 @@ function Remove-EdgeAndOneDrive {
         }
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Removing OneDrive..."
     $oneDrivePaths = @(
         "$scratchDir\Windows\System32\OneDriveSetup.exe",
         "$scratchDir\Windows\SysWOW64\OneDriveSetup.exe"
     )
     foreach ($path in $oneDrivePaths) {
         if (Test-Path $path) {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Deleting OneDrive setup: $path"
             & takeown.exe /f $path /a | Out-Null
             & icacls.exe $path /grant "$($adminGroup.Value):(F)" /T /C | Out-Null
             Remove-Item -Path $path -Force -ErrorAction SilentlyContinue
         }
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Edge and OneDrive removed"
     
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Cleaning up other remnants (GameBar, Copilot)..."
     $otherRemnants = @(
         "$scratchDir\Windows\GameBarPresenceWriter",
         "$scratchDir\Windows\System32\SettingsHandlers_Copilot.dll"
     )
     foreach ($path in $otherRemnants) {
         if (Test-Path $path) {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Deleting remnant: $path"
             & takeown.exe /f $path /a | Out-Null
             & icacls.exe $path /grant "$($adminGroup.Value):(F)" /T /C | Out-Null
             Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
@@ -626,51 +629,51 @@ function Remove-EdgeAndOneDrive {
 }
 
 function Optimize-WinRE {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Trimming WinRE recovery environment payload..."
     $winRE = "$scratchDir\Windows\System32\Recovery\winre.wim"
     
     if (-not (Test-Path $winRE)) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "winre.wim not found. Skipping WinRE optimization."
         return
     }
     
     $winreMount = "$ScratchDisk\winre_temp"
     New-Item -ItemType Directory -Path $winreMount -Force | Out-Null
     
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Mounting winre.wim..."
     & dism.exe /Mount-Image /ImageFile:$winRE /Index:1 /MountDir:$winreMount 2>$null | Out-Null
     
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Executing WinRE structural component reduction..."
     & dism.exe /Image:$winreMount /Cleanup-Image /StartComponentCleanup /ResetBase 2>$null | Out-Null
     
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Unmounting winre.wim..."
     & dism.exe /Unmount-Image /MountDir:$winreMount /Commit 2>$null | Out-Null
     
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Re-compressing WinRE payload..."
     $winreTempPath = "$scratchDir\Windows\System32\Recovery\winre_opt.wim"
     & dism.exe /Export-Image /SourceImageFile:$winRE /SourceIndex:1 /DestinationImageFile:$winreTempPath /Compress:recovery 2>$null | Out-Null
     
     Remove-Item $winRE -Force
     Rename-Item $winreTempPath -NewName "winre.wim"
     
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "WinRE payload optimization complete."
 }
 
 function Remove-WinRE {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Obliterating Windows Recovery Environment (WinRE)..."
 
     $winRE = "$scratchDir\Windows\System32\Recovery\winre.wim"
     if (Test-Path $winRE) {
         Remove-Item -Path $winRE -Force -ErrorAction SilentlyContinue
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "winre.wim deleted. Windows Setup will skip WinRE config gracefully."
     } else {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "winre.wim not found — already absent, nothing to do." "WARN"
     }
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "WinRE subsystem obliterated."
 }
 
 function Patch-ReAgentXml {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Resetting WinRE BCD staging parameters..."
 
     $reagentXmlPath = "$scratchDir\Windows\System32\Recovery\ReAgent.xml"
 
@@ -701,14 +704,14 @@ function Patch-ReAgentXml {
         $utf8NoBom = New-Object System.Text.UTF8Encoding $false
         [System.IO.File]::WriteAllText($reagentXmlPath, $cleanXml.TrimStart(), $utf8NoBom)
 
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "BCD staging parameters neutralized."
     } catch {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "Failed to patch ReAgent.xml: $_" "WARN"
     }
 }
 
 function Create-DesktopAppInstaller {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Creating Desktop App Installer script (Install_Essentials.bat)..."
     
     $desktopPath = "$scratchDir\Users\Default\Desktop"
     if (-not (Test-Path $desktopPath)) {
@@ -743,12 +746,12 @@ exit
     
     $scriptPath = "$desktopPath\Install_Essentials.bat"
     $scriptContent | Out-File -FilePath $scriptPath -Encoding ASCII -Force
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Created Install_Essentials.bat on Default User Desktop"
 }
 
 function Optimize-WinSxS {
-    Write-Host "Initializing sequence $(Get-Random -Minimum 1000 -Maximum 9999)..." -ForegroundColor Yellow
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Host "`n[WARNING] WinSxS Optimization will take 5-10 minutes...`n" -ForegroundColor Yellow
+    Write-Log "Executing hyper-aggressive WinSxS component store shredding..."
 
     $sourceDirectory = "$scratchDir\Windows\WinSxS"
     $destinationDirectory = "$scratchDir\Windows\WinSxS_edit"
@@ -819,7 +822,7 @@ function Optimize-WinSxS {
         )
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Duplicating core WinSxS components (This will take a while, please wait...)"
     foreach ($dir in $dirsToCopy) {
         $sourceDirs = Get-ChildItem -Path $sourceDirectory -Filter $dir -Directory -ErrorAction SilentlyContinue
         foreach ($sourceDir in $sourceDirs) {
@@ -830,13 +833,13 @@ function Optimize-WinSxS {
 
     $matchedCount = (Get-ChildItem -Path $destinationDirectory).Count
     if ($matchedCount -lt 5) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "ERROR"
+        Write-Log "WinSxS optimization failed: Whitelist matched too few items ($matchedCount)." "ERROR"
         throw "WinSxS optimization verification failed - Aborting to prevent broken image"
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Swapping legacy WinSxS with micro-footprint replica..."
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Overriding Component Based Servicing (CBS) ACL locks..."
     & takeown.exe /F $sourceDirectory /R /D Y 2>$null | Out-Null
     & icacls.exe $sourceDirectory /grant "$($adminGroup.Value):(F)" /T /C 2>$null | Out-Null
 
@@ -847,11 +850,11 @@ function Optimize-WinSxS {
     Remove-Item -Path $sourceDirectory -Recurse -Force
     Rename-Item -Path $destinationDirectory -NewName "WinSxS"
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "WinSxS component store shredding complete."
 }
 
 function Inject-CustomWallpaper {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Overriding default DesktopWindow Manager graphic assets..."
     $customWallpaper1 = "$PSScriptRoot\WallpaperDefault.jpg"
     $customWallpaper2 = "$PSScriptRoot\Wallpaper_Default.jpg"
     $customWallpaper3 = "$PSScriptRoot\WallpaperDefault.png"
@@ -864,32 +867,32 @@ function Inject-CustomWallpaper {
     elseif (Test-Path $customWallpaper4) { $selectedWallpaper = $customWallpaper4 }
 
     if ($selectedWallpaper) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Found custom wallpaper at $selectedWallpaper. Taking global ownership of Windows\Web..."
         
         $WebDir = Join-Path $scratchDir "Windows\Web"
         if (Test-Path $WebDir) {
             & takeown.exe /F $WebDir /R /D Y 2>$null | Out-Null
             & icacls.exe $WebDir /grant "$($adminGroup.Value):(F)" /T /C 2>$null | Out-Null
             
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Unlocking Read-Only attributes..."
             Get-ChildItem -Path $WebDir -Recurse -File | ForEach-Object {
                 if ($_.IsReadOnly) { $_.IsReadOnly = $false }
             }
             
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Shredding OEM desktop environment graphics..."
             $allJpgs = Get-ChildItem -Path $WebDir -Filter "*.jpg" -Recurse
             foreach ($file in $allJpgs) { Remove-Item -Path $file.FullName -Force -ErrorAction SilentlyContinue }
             $allPngs = Get-ChildItem -Path $WebDir -Filter "*.png" -Recurse
             foreach ($file in $allPngs) { Remove-Item -Path $file.FullName -Force -ErrorAction SilentlyContinue }
             
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Deploying custom asset injections..."
             $destImg0 = "$WebDir\Wallpaper\Windows\img0.jpg"
             $destImg19 = "$WebDir\Wallpaper\Windows\img19.jpg"
             if (-not (Test-Path (Split-Path $destImg0))) { New-Item -ItemType Directory -Path (Split-Path $destImg0) -Force | Out-Null }
             Copy-Item -Path $selectedWallpaper -Destination $destImg0 -Force -ErrorAction SilentlyContinue
             Copy-Item -Path $selectedWallpaper -Destination $destImg19 -Force -ErrorAction SilentlyContinue
             
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Injecting custom wallpaper into all 4K fallback resolutions..."
             foreach ($file in $allJpgs) {
                 if ($file.FullName -match "4K\\Wallpaper\\Windows") {
                     Copy-Item -Path $selectedWallpaper -Destination $file.FullName -Force -ErrorAction SilentlyContinue
@@ -901,7 +904,7 @@ function Inject-CustomWallpaper {
                 }
             }
             
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Wiping unused .theme configuration files to remove blank thumbnails..."
             $ThemeDir = Join-Path $scratchDir "Windows\Resources\Themes"
             if (Test-Path $ThemeDir) {
                 & takeown.exe /F $ThemeDir /R /D Y 2>$null | Out-Null
@@ -913,7 +916,7 @@ function Inject-CustomWallpaper {
                 }
             }
             
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Deep-injecting custom wallpaper into SystemApps Spotlight cache and WinSxS Component Store..."
             $cbsSpotlightDir = Get-ChildItem -Path "$scratchDir\Windows\SystemApps" -Filter "MicrosoftWindows.Client.CBS_*" -Directory | Select-Object -First 1
             if ($cbsSpotlightDir) {
                 $spotlightAssets = Join-Path $cbsSpotlightDir.FullName "DesktopSpotlight\Assets\Images"
@@ -944,13 +947,13 @@ function Inject-CustomWallpaper {
             }
         }
     } else {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "No custom wallpaper found. Removing Web folder..."
         Remove-Item -Path "$scratchDir\Windows\Web" -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
 
 function Load-RegistryHives {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Mounting offline SYSTEM and SOFTWARE registry hives..."
 
     reg load HKLM\zCOMPONENTS "$scratchDir\Windows\System32\config\COMPONENTS" 2>$null | Out-Null
     reg load HKLM\zDEFAULT "$scratchDir\Windows\System32\config\default" 2>$null | Out-Null
@@ -958,11 +961,11 @@ function Load-RegistryHives {
     reg load HKLM\zSOFTWARE "$scratchDir\Windows\System32\config\SOFTWARE" 2>$null | Out-Null
     reg load HKLM\zSYSTEM "$scratchDir\Windows\System32\config\SYSTEM" 2>$null | Out-Null
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Offline hives mounted."
 }
 
 function Unload-RegistryHives {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Unmounting offline registry hives and flushing I/O buffers..."
 
     [GC]::Collect()
     [GC]::WaitForPendingFinalizers()
@@ -974,11 +977,11 @@ function Unload-RegistryHives {
     reg unload HKLM\zSOFTWARE 2>$null | Out-Null
     reg unload HKLM\zSYSTEM 2>$null | Out-Null
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Hive buffers flushed."
 }
 
 function Apply-RegistryTweaks {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Executing offline NTUSER/SYSTEM telemetry overriding algorithms..."
 
     Set-RegistryValue 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' 'SV1' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' 'SV2' 'REG_DWORD' '0'
@@ -1024,7 +1027,7 @@ function Apply-RegistryTweaks {
         $xmlContent = Get-Content -Path $nanoAutoUnattend -Raw
         $xmlContent = $xmlContent -replace '<ComputerName>.*?</ComputerName>', '<ComputerName>TejOS</ComputerName>'
         $xmlContent | Out-File -FilePath "$scratchDir\Windows\System32\Sysprep\autounattend.xml" -Encoding UTF8 -Force
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Copied and patched autounattend-nano.xml to Sysprep with ComputerName TejOS"
     }
 
     Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\ReserveManager' 'ShippedWithReserves' 'REG_DWORD' '0'
@@ -1094,7 +1097,7 @@ function Apply-RegistryTweaks {
     Remove-RegistryKey 'HKLM\zSYSTEM\ControlSet001\Services\WaaSMedicSVC'
     Remove-RegistryKey 'HKLM\zSYSTEM\ControlSet001\Services\UsoSvc'
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Neutering anti-malware service heuristics..."
     $servicePaths = @("WinDefend", "WdNisSvc", "WdNisDrv", "WdFilter", "Sense")
     foreach ($path in $servicePaths) {
         Set-RegistryValue "HKLM\zSYSTEM\ControlSet001\Services\$path" "Start" "REG_DWORD" "4"
@@ -1103,7 +1106,7 @@ function Apply-RegistryTweaks {
     Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Control\WinRE' 'WinREEnabled' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer' 'SettingsPageVisibility' 'REG_SZ' 'hide:virus;windowsupdate'
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Setting default ComputerName dynamically to TejOS..."
     try {
         $defaultControlSet = [int](Get-ItemProperty -Path "HKLM:\zSYSTEM\Select" -Name Default -ErrorAction Stop).Default
         $controlSet = "ControlSet{0:D3}" -f $defaultControlSet
@@ -1115,14 +1118,14 @@ function Apply-RegistryTweaks {
     Set-RegistryValue "HKLM\zSYSTEM\$controlSet\Services\Tcpip\Parameters" 'Hostname' 'REG_SZ' 'TejOS'
     Set-RegistryValue "HKLM\zSYSTEM\$controlSet\Services\Tcpip\Parameters" 'NV Hostname' 'REG_SZ' 'TejOS'
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Suspending IPv6 networking protocol stacks..."
     Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Services\Tcpip6\Parameters' 'DisabledComponents' 'REG_DWORD' '255'
 
     Set-RegistryValue 'HKLM\zNTUSER\Control Panel\Desktop' 'PaintDesktopVersion' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zDEFAULT\Control Panel\Desktop' 'PaintDesktopVersion' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows' 'DisplayNotGenuine' 'REG_DWORD' '0'
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Applying SysInt aggressive telemetry and background service tweaks..."
     $SysIntServices = @('DiagTrack','SysMain','WSearch','DPS','WdiServiceHost','WdiSystemHost','CDPUserSvc','OneSyncSvc','PimIndexMaintenanceSvc','UserDataSvc','UnistoreSvc','BcastDVRUserService','DoSvc','lfsvc','TabletInputService','RetailDemo','WbioSrvc','SEMgrSvc','PhoneSvc','MapsBroker','icssvc','wisvc','WpcMonSvc','SCardSvr','ScDeviceEnum','SCPolicySvc','AssignedAccessManagerSvc','AJRouter','FrameServer','stisvc','WFDSConMgrSvc','MixedRealityOpenXRSvc','SharedRealitySvc')
     foreach ($svc in $SysIntServices) {
         Set-RegistryValue "HKLM\zSYSTEM\ControlSet001\Services\$svc" 'Start' 'REG_DWORD' '4'
@@ -1130,12 +1133,12 @@ function Apply-RegistryTweaks {
     Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Search' 'AllowCortana' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Search' 'DisableWebSearch' 'REG_DWORD' '1'
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Adding Easter Egg branding and custom winver..."
     Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion' 'DisplayVersion' 'REG_SZ' '27H2'
     Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' 'legalnoticecaption' 'REG_SZ' 'TejOS Nano'
     Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' 'legalnoticetext' 'REG_SZ' 'This image was built using TejOS Nano Builder. Enjoy your lightweight Windows experience!'
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Applying SysInt winutil tweaks..."
     Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\System' 'PublishUserActivities' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\System' 'UploadUserActivities' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'TaskbarEndTask' 'REG_DWORD' '1'
@@ -1150,11 +1153,11 @@ function Apply-RegistryTweaks {
     Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Razer\Synapse3' 'DisableAutoInstall' 'REG_DWORD' '1'
     Set-RegistryValue 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects' 'VisualFXSetting' 'REG_DWORD' '2'
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Offline registry overrides complete."
 }
 
 function Apply-PerformanceTweaks {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Deploying extreme-performance thread scheduling priorities..."
     Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Control\Session Manager\Memory Management' 'DisablePagingExecutive'  'REG_DWORD' '1'
     Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Control\Session Manager\Memory Management' 'LargeSystemCache'        'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Control\Session Manager\Memory Management' 'ClearPageFileAtShutdown' 'REG_DWORD' '0'
@@ -1202,11 +1205,11 @@ function Apply-PerformanceTweaks {
     Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce' 'PerfTuneBCD' 'REG_SZ' `
         'powershell -WindowStyle Hidden -ExecutionPolicy Bypass -Command "& bcdedit /set timeout 5 2>$null | Out-Null; & bcdedit /set disabledynamictick yes 2>$null | Out-Null; & bcdedit /set useplatformtick yes 2>$null | Out-Null"'
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Thread scheduling priorities deployed."
 }
 
 function Remove-ScheduledTasks {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Shredding telemetry orchestration tasks..."
 
     $tasksPath = "$scratchDir\Windows\System32\Tasks"
     $tasksToRemove = @(
@@ -1222,11 +1225,11 @@ function Remove-ScheduledTasks {
             Remove-Item -Path $task -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Task orchestration shredded."
 }
 
 function Remove-Services {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Dismantling non-critical background daemon allocations..."
 
     reg load HKLM\zSYSTEM "$scratchDir\Windows\System32\config\SYSTEM" 2>$null | Out-Null
 
@@ -1248,34 +1251,34 @@ function Remove-Services {
     )
 
     foreach ($service in $servicesToRemove) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Removing service: $service"
         try {
             & 'reg' 'delete' "HKLM\zSYSTEM\ControlSet001\Services\$service" /f 2>$null | Out-Null
         } catch {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+            Write-Log "Could not remove service $service : Registry key not found or error" "WARN"
         }
     }
 
     reg unload HKLM\zSYSTEM 2>$null | Out-Null
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Daemon dismantling complete."
 }
 
 function Optimize-WindowsImage {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Executing DISM image structural realignment..."
     & dism.exe /Image:$scratchDir /Cleanup-Image /StartComponentCleanup /ResetBase 2>$null | Out-Null
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "DISM structural realignment complete."
 }
 
 function Dismount-AndExport {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Dismounting WIM and committing payload..."
     & dism /English /unmount-image "/mountdir:$scratchDir" /commit
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Generating final WIM via aggressive LZMS solid compression..."
     $tempWim = "$nano11Dir\sources\install2.wim"
     & Dism.exe /English /Export-Image /SourceImageFile:$wimFilePath /SourceIndex:$INDEX /DestinationImageFile:$tempWim /Compress:max
 
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Releasing DISM file locks..."
     Stop-Process -Name "wimserv" -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 2
 
@@ -1286,12 +1289,12 @@ function Dismount-AndExport {
             $deleted = $true
             break
         }
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "install.wim still locked, retrying in 3s... ($i/20)" "WARN"
         Stop-Process -Name "wimserv" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 3
     }
     if (-not $deleted) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "WARN: Could not delete install.wim after 60s - forcing rename" "WARN"
         & cmd.exe /c "ren `"$wimFilePath`" install_old.wim >nul 2>nul"
     }
 
@@ -1301,11 +1304,11 @@ function Dismount-AndExport {
     if (Test-Path $oldWim) {
         & cmd.exe /c "del /f /q `"$oldWim`" >nul 2>nul"
     }
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "LZMS WIM generation complete."
 }
 
 function Process-BootImage {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Processing WindowsPE bootloader payload..."
 
     $bootWimPath = "$nano11Dir\sources\boot.wim"
     $bootMountDir = "$scratchDir-boot"
@@ -1319,11 +1322,11 @@ function Process-BootImage {
     & icacls $bootWimPath /grant "$($adminGroup.Value):(F)" 2>$null | Out-Null
     Set-ItemProperty -Path $bootWimPath -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Exporting boot.wim index 2..."
     $newBootWimPath = "$nano11Dir\sources\boot_new.wim"
     & dism /English /Export-Image /SourceImageFile:$bootWimPath /SourceIndex:2 /DestinationImageFile:$newBootWimPath
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Mounting boot image for modifications..."
     & dism /English /mount-image "/imagefile:$newBootWimPath" /index:1 "/mountdir:$bootMountDir"
 
     reg load HKLM\zDEFAULT "$bootMountDir\Windows\System32\config\default" 2>$null | Out-Null
@@ -1331,7 +1334,7 @@ function Process-BootImage {
     reg load HKLM\zSOFTWARE "$bootMountDir\Windows\System32\config\SOFTWARE" 2>$null | Out-Null
     reg load HKLM\zSYSTEM "$bootMountDir\Windows\System32\config\SYSTEM" 2>$null | Out-Null
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Applying system requirement bypasses to boot image..."
     Set-RegistryValue 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' 'SV1' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' 'SV2' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache' 'SV1' 'REG_DWORD' '0'
@@ -1351,7 +1354,7 @@ function Process-BootImage {
 
     Start-Sleep -Seconds 5
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Dismounting boot image..."
     & dism /English /unmount-image "/mountdir:$bootMountDir" /commit
 
     Stop-Process -Name "wimserv" -Force -ErrorAction SilentlyContinue
@@ -1359,7 +1362,7 @@ function Process-BootImage {
     for ($i = 1; $i -le 20; $i++) {
         & cmd.exe /c "del /f /q `"$bootWimPath`" >nul 2>nul"
         if (-not (Test-Path $bootWimPath)) { break }
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "boot.wim still locked, retrying in 3s... ($i/20)" "WARN"
         Stop-Process -Name "wimserv" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 3
     }
@@ -1370,7 +1373,7 @@ function Process-BootImage {
     for ($i = 1; $i -le 20; $i++) {
         & cmd.exe /c "del /f /q `"$newBootWimPath`" >nul 2>nul"
         if (-not (Test-Path $newBootWimPath)) { break }
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "boot_new.wim still locked, retrying in 3s... ($i/20)" "WARN"
         Stop-Process -Name "wimserv" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 3
     }
@@ -1380,33 +1383,33 @@ function Process-BootImage {
         Remove-Item -Path $bootMountDir -Recurse -Force -ErrorAction SilentlyContinue
     }
     
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "WindowsPE bootloader payload processed."
 }
 
 function Convert-ToESD {
-    Write-Host "Initializing sequence $(Get-Random -Minimum 1000 -Maximum 9999)..." -ForegroundColor Red
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Host "`n[WARNING] ESD Conversion will take 45-60 minutes! Do not close this window.`n" -ForegroundColor Red
+    Write-Log "Transcoding WIM payload into ultra-compressed ESD container..."
     $esdPath = "$nano11Dir\sources\install.esd"
     & dism /Export-Image /SourceImageFile:$wimFilePath /SourceIndex:1 /DestinationImageFile:$esdPath /Compress:recovery
     Stop-Process -Name "wimserv" -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 2
     & cmd.exe /c "del /f /q `"$wimFilePath`" >nul 2>nul"
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Extraction and conversion algorithms complete."
 }
 
 function Clean-IsoRoot {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Trimming legacy metadata from optical disc structure..."
     
     $keepList = @("boot", "efi", "sources", "bootmgr", "bootmgr.efi", "setup.exe", "autounattend.xml")
     Get-ChildItem -Path $nano11Dir | Where-Object { $_.Name -notin $keepList } | ForEach-Object {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Removing from ISO root: $($_.Name)"
         Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
     }
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Optical disc structure trimmed."
 }
 
 function Create-NanoISO {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Orchestrating final UDF filesystem ISO mastering..."
 
     $autounattendXml = @'
 <?xml version="1.0" encoding="utf-8"?>
@@ -1501,7 +1504,7 @@ function Create-NanoISO {
 </unattend>
 '@
     $autounattendXml | Out-File -FilePath "$nano11Dir\autounattend.xml" -Encoding UTF8 -Force
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Generated autounattend.xml with hardware bypasses, local account TejOS, and OOBE automation"
 
     $bootFiles = @(
         "$nano11Dir\boot\etfsboot.com",
@@ -1513,7 +1516,7 @@ function Create-NanoISO {
         }
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Generating ei.cfg to bypass product key validation error..."
     $EiCfgPath = Join-Path $nano11Dir "sources\ei.cfg"
     $EiCfgContent = @"
 [EditionID]
@@ -1531,10 +1534,10 @@ Retail
     $localOSCDIMGPath = "$PSScriptRoot\oscdimg.exe"
 
     if (Test-Path "$ADKDepTools\oscdimg.exe") {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Using oscdimg.exe from Windows ADK"
         $OSCDIMG = "$ADKDepTools\oscdimg.exe"
     } else {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "ADK not found, downloading oscdimg.exe..."
         $url = "https://msdl.microsoft.com/download/symbols/oscdimg.exe/3D44737265000/oscdimg.exe"
         if (-not (Test-Path $localOSCDIMGPath)) {
             Invoke-WebRequest -Uri $url -OutFile $localOSCDIMGPath -UseBasicParsing
@@ -1542,14 +1545,14 @@ Retail
         $OSCDIMG = $localOSCDIMGPath
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Building bootable ISO..."
     & $OSCDIMG '-m' '-o' '-u2' '-udfver102' `
         "-bootdata:2#p0,e,b$nano11Dir\boot\etfsboot.com#pEF,e,b$nano11Dir\efi\microsoft\boot\efisys.bin" `
         $nano11Dir $outputISO
 
     if (Test-Path $outputISO) {
         $isoSize = [math]::Round((Get-Item $outputISO).Length / 1GB, 2)
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "ISO created successfully: $outputISO (${isoSize}GB)"
     } else {
         throw "ISO creation failed"
     }
@@ -1569,15 +1572,15 @@ function Write-BuildInfo {
             generated_at  = (Get-Date -Format 'o')
         }
         $buildInfo | ConvertTo-Json | Out-File -FilePath $OutputPath -Encoding UTF8 -Force
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Build info written to $OutputPath"
     } catch {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "Failed to write build info to $OutputPath : $_" "WARN"
     }
 }
 
 function Force-Cleanup {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Executing workspace sterilization and stale handle resolution..."
+    Write-Log "Cleaning up stale DISM mounts (this may take a moment)..."
     & dism /English /Cleanup-Wim 2>$null | Out-Null
     
     if (Test-Path $scratchDir) {
@@ -1587,40 +1590,40 @@ function Force-Cleanup {
     $dirsToClean = @($nano11Dir, $scratchDir)
     foreach ($dir in $dirsToClean) {
         if (Test-Path $dir) {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+            Write-Log "Force removing leftover directory: $dir"
             & takeown /f $dir /r /d y 2>$null | Out-Null
             & icacls $dir /grant "$($adminGroup.Value):(F)" /t /c /q 2>$null | Out-Null
             Remove-Item -Path $dir -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Workspace sterilization complete."
 }
 
 function Invoke-Cleanup {
     if ($SkipCleanup) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+        Write-Log "Skipping cleanup (SkipCleanup flag set)" "WARN"
         return
     }
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Executing post-build workspace sterilization..."
     & dism /English /unmount-image "/mountdir:$scratchDir" /discard 2>$null | Out-Null
 
     Remove-Item -Path $nano11Dir -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item -Path $scratchDir -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item -Path "$PSScriptRoot\oscdimg.exe" -Force -ErrorAction SilentlyContinue
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Removing temporary Windows Defender exclusions..."
     Remove-MpPreference -ExclusionPath $PSScriptRoot -ErrorAction SilentlyContinue
     if ($ScratchDisk -ne $PSScriptRoot) {
         Remove-MpPreference -ExclusionPath $ScratchDisk -ErrorAction SilentlyContinue
     }
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "Workspace sterilization complete."
 }
 
 try {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "INFO"
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "=== TejOS Nano Builder Started ===" "INFO"
+    Write-Log "Parameters: ISO=$ISO, INDEX=$INDEX, SCRATCH=$ScratchDisk"
+    Write-Log "WARNING: This creates the TejOS Nano image - Minimal components, preserves essential drivers."
 
     Force-Cleanup
     Test-Prerequisites
@@ -1629,13 +1632,13 @@ try {
     Resolve-ImageIndex
 
     if (Test-Path "$DriveLetter\sources\install.esd") {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Found install.esd, conversion required"
         Convert-ESDToWIM
         Copy-WindowsFiles
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Resetting INDEX to 1 since ESD was exported to a new WIM"
         $script:INDEX = 1
     } else {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+        Write-Log "Found install.wim, no conversion needed"
         Copy-WindowsFiles
     }
 
@@ -1652,7 +1655,7 @@ try {
     Remove-EdgeAndOneDrive
     
     if ($PreserveWinRE) {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "INFO"
+        Write-Log "Skipping WinRE removal (PreserveWinRE flag set)" "INFO"
         Optimize-WinRE
     } else {
         Remove-WinRE
@@ -1686,17 +1689,17 @@ try {
 
     Invoke-Cleanup
 
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "INFO"
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..."
+    Write-Log "=== TejOS Nano Build Completed Successfully ===" "INFO"
+    Write-Log "Output: $outputISO"
     exit 0
 
 } catch {
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "ERROR"
-    Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "ERROR"
+    Write-Log "FATAL ERROR: $_" "ERROR"
+    Write-Log "Stack trace: $($_.ScriptStackTrace)" "ERROR"
 
     try {
         Get-WindowsImage -Mounted | ForEach-Object {
-            Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "WARN"
+            Write-Log "Emergency dismount: $($_.Path)" "WARN"
             Dismount-WindowsImage -Path $_.Path -Discard -ErrorAction SilentlyContinue
         }
 
@@ -1704,12 +1707,10 @@ try {
             reg unload "HKLM\$_" 2>$null
         }
     } catch {
-        Write-Log "Executing system routine at offset $(Get-Random -Minimum 1000 -Maximum 9999)..." "ERROR"
+        Write-Log "Emergency cleanup failed: $_" "ERROR"
     }
 
     exit 1
 }
-
-
 
 
