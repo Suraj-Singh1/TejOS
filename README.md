@@ -9,6 +9,11 @@
     <img src="https://img.shields.io/badge/Platform-Windows%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 11" />
   
   </p>
+
+  <p>
+    <a href="https://t.me/TejOS11"><img src="https://img.shields.io/badge/Telegram-Join%20the%20Community-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram Group" /></a>
+  </p>
+  <p><sub>Questions, hardware reports, or suggestions for what TejOS should support next? Drop them in the group.</sub></p>
 </div>
 
 ---
@@ -50,7 +55,9 @@ The output: an ultra-light **~2.7 GB Windows 11 ISO** (with ESD compression) tha
 
 ## 🔮 Tested on the Cutting Edge: Windows 11 Insider Preview
 
-TejOS is developed and validated against the latest **Windows 11 Insider Preview builds** (currently **29648.1000**, likely the foundation of the next feature update). If the build survives the unstable Insider channel, it is rock-solid on stable Windows 11 releases.
+The current TejOS Nano release was built and validated specifically against **Windows 11 Insider Preview build 29648.1000**. It has **not** been tested against other ISOs — earlier builds, other channels, or stable releases — so treat anything outside that one build as unverified for now.
+
+Which version(s) TejOS supports next isn't locked in yet. Rather than guess, we're going by what the community actually wants and reports back — so if you try Nano against a different ISO (working or not), or have an opinion on what should be supported next, share it in the [Telegram group](https://t.me/TejOS11). Future tiers and version support will be shaped by that feedback.
 
 ---
 
@@ -90,12 +97,17 @@ To keep the ISO tiny, Nano slims the Microsoft Driver Store down to essential un
 1. **Download the ISO:** get your preferred Windows 11 ISO (e.g., Insider Preview 29648.1000) from Microsoft.
 2. **Mount it:** right-click the `.iso` → **Mount**, and note the drive letter (e.g., `E:\`).
 3. **Open PowerShell as Administrator** and `cd` into the TejOS folder.
-4. **Run the builder with your flags:**
+4. **Allow the script to run.** Windows blocks unsigned scripts by default, so lift that restriction for this one session:
+    ```powershell
+    Set-ExecutionPolicy Bypass -Scope Process -Force
+    ```
+    `-Scope Process` means this only applies to the current PowerShell window — it reverts the moment you close it and never touches your system-wide execution policy.
+5. **Run the builder with your flags:**
     ```powershell
     .\Build-TejOS-Nano.ps1 -ISO E -PreserveWinRE -ESD
     ```
-5. **Wait:** the script extracts the WIM, performs offline registry surgery, strips WinSxS, applies compression, and outputs a bootable `TejOS-Nano.iso` into the script folder.
-6. **Flash & boot:** write the ISO to USB with [Rufus](https://rufus.ie/). **Important:** when Rufus prompts you, **uncheck every "Windows User Experience" tweak** (TPM removal, local account creation, etc.) — TejOS already bakes all of that into the image via `autounattend.xml`. Applying it twice breaks the installation.
+6. **Wait:** the script extracts the WIM, performs offline registry surgery, strips WinSxS, applies compression, and outputs a bootable `TejOS-Nano.iso` into the script folder.
+7. **Flash & boot:** write the ISO to USB with [Rufus](https://rufus.ie/). **Important:** when Rufus prompts you, **uncheck every "Windows User Experience" tweak** (TPM removal, local account creation, etc.) — TejOS already bakes all of that into the image via `autounattend.xml`. Applying it twice breaks the installation.
 
 ### Command-Line Parameters
 - `-ISO <DriveLetter>`: skips the interactive prompt and pulls the WIM from the specified drive.
@@ -105,19 +117,20 @@ To keep the ISO tiny, Nano slims the Microsoft Driver Store down to essential un
 
 ---
 
-## 🆚 How Does TejOS Compare? (vs. tiny11builder, WinUtil & Prebuilt Lite ISOs)
+## 🆚 How Does TejOS Compare? (vs. tiny11builder & Prebuilt Lite ISOs)
 
-| | **TejOS** | tiny11builder | WinUtil (live tweaks) | Prebuilt "Lite ISO" sites |
-| :--- | :--- | :--- | :--- | :--- |
-| Method | Offline ISO build (PowerShell + DISM) | Offline ISO build | Tweaks a running install | Unknown |
-| Uses your own official ISO | ✅ required | ✅ required | n/a | ❌ unknown provenance |
-| TPM/Secure Boot bypass baked into the image | ✅ | ✅ | ❌ | varies |
-| Fully unattended install | ✅ via `autounattend.xml` | ❌ | ❌ | varies |
-| ESD compression option | ✅ | ✅ (recent versions) | n/a | varies |
-| Multiple tiers | 4 | 1 (plus Core variant) | presets | — |
-| WinSxS aggressively stripped (non-serviceable) | ✅ (Nano only) | ✅ (Core only) | ❌ | varies |
+| | **TejOS** | tiny11builder | Prebuilt "Lite ISO" sites |
+| :--- | :--- | :--- | :--- |
+| Method | Offline ISO build (PowerShell + DISM) | Offline ISO build | Unknown |
+| Uses your own official ISO | ✅ required | ✅ required | ❌ unknown provenance |
+| TPM/Secure Boot bypass baked into the image | ✅ | ✅ | varies |
+| Fully unattended install | ✅ via `autounattend.xml` | ❌ | varies |
+| ESD compression option | ✅ | ✅ (recent versions) | varies |
+| Multiple tiers | 4 | 1 (plus Core variant) | — |
+| WinSxS aggressively stripped (non-serviceable) | ✅ (Nano only) | ✅ (Core only) | varies |
+| Built against | Bleeding-edge Insider Preview (29648.1000) | Stable channel releases | Unknown |
 
-*All three open-source projects above are excellent and directly inspired TejOS — see the credits below. This table is about fit, not superiority.*
+*tiny11builder is excellent and directly inspired TejOS — see the full list of credits below. This table is about fit, not superiority: tiny11 is built and tested against stable channel releases, and in our own testing it ran into problems on Insider Preview 29648.1000 — the bleeding-edge channel TejOS is specifically built for.*
 
 ---
 
