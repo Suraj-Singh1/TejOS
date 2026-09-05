@@ -89,6 +89,7 @@ To keep the ISO tiny, Nano slims the Microsoft Driver Store down to essential un
 - An **official Windows 11 ISO** from Microsoft (any edition, including Insider Preview)
 - ~20 GB free disk space · 8 GB RAM minimum (12 GB if using `-ESD` compression)
 - A USB stick (8 GB+) and [Rufus](https://rufus.ie/)
+- ⚠️ **Antivirus Temporarily Disabled**: You MUST temporarily disable Windows Defender Real-Time Protection and Tamper Protection (or your third-party antivirus) before running the script. Antivirus engines will aggressively lock the temporary WIM files during the build process, causing the script to crash.
 
 ---
 
