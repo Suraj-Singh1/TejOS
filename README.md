@@ -116,6 +116,10 @@ To keep the ISO tiny, Nano slims the Microsoft Driver Store down to essential un
 - `-ESD`: activates LZMS solid compression at the end of the build — ISO shrinks significantly, at the cost of heavy CPU usage and up to 12 GB of RAM.
 - The currently validated reference build (Insider 29648.1000) was produced using both `-PreserveWinRE` and `-ESD`.
 
+### 💡 What to Expect During the Build
+- **Harmless Red Errors**: During the script's run, you may see a few (2 to 5) red error messages pop up in the console. **Do not worry!** This simply means a specific minor component was already removed or didn't exist in your specific ISO. The script is designed to safely skip past those errors and continue building the image.
+- **Console Freezing**: If the console output suddenly stops moving and appears frozen for a long time, click inside the PowerShell window and **press the `Enter` key**. Windows sometimes enables a feature called "QuickEdit Mode" which accidentally pauses the entire script if you click inside the window.
+
 ---
 
 ## 🆚 How Does TejOS Compare? (vs. tiny11builder & Prebuilt Lite ISOs)
