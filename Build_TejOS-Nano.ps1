@@ -1,4 +1,4 @@
-﻿
+
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$true, HelpMessage="Drive letter of mounted Windows 11 ISO (e.g., E)")]
@@ -221,14 +221,26 @@ function Resolve-ImageIndex {
             Write-Host "[$($img.ImageIndex)] $($img.ImageName)"
         }
         Write-Host ""
-        $choice = Read-Host "Enter the index number"
-        if ([int]::TryParse($choice, [ref]$script:INDEX)) {
-            if ($script:INDEX -notin $validIndices) {
-                Write-Log "Invalid index $script:INDEX." "ERROR"
-                throw "User selected an invalid index."
+        $choice = ""
+        $script:INDEX = 0
+        while ($true) {
+            $choice = Read-Host "Enter the index number"
+            $choice = ([string]$choice).Trim()
+            if ([string]::IsNullOrEmpty($choice)) {
+                Write-Host "No input detected. Please enter one of the listed numbers: $($validIndices -join ', ')" -ForegroundColor Yellow
+                continue
             }
-        } else {
-            throw "Invalid input."
+            $parsed = 0
+            if (-not [int]::TryParse($choice, [ref]$parsed)) {
+                Write-Host "'$choice' is not a number. Please enter one of the listed numbers: $($validIndices -join ', ')" -ForegroundColor Yellow
+                continue
+            }
+            if ($parsed -notin $validIndices) {
+                Write-Host "$parsed is not a valid choice. Valid indices: $($validIndices -join ', ')" -ForegroundColor Yellow
+                continue
+            }
+            $script:INDEX = $parsed
+            break
         }
     } else {
         if ($INDEX -notin $validIndices) {
@@ -270,7 +282,27 @@ function Mount-WindowsImageFile {
     & icacls $wimFilePath /grant "$($adminGroup.Value):(F)" | Out-Null
     Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
 
+    # The mount directory can disappear if it is deleted mid-run (e.g. manually
+    # during the ISO copy phase). Recreate it right before mounting so DISM
+    # never fails with 0xc1420115 "mount to a directory that does not exist".
+    if (-not (Test-Path $scratchDir)) {
+        Write-Log "Mount directory $scratchDir is missing - recreating it" "WARN"
+        New-Item -ItemType Directory -Force -Path $scratchDir | Out-Null
+    }
+
+    Write-Log "Mounting image index $INDEX to $scratchDir (takes a few minutes)..."
     & dism /English "/mount-image" "/imagefile:$wimFilePath" "/index:$INDEX" "/mountdir:$scratchDir"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Log "DISM mount-image failed with exit code $LASTEXITCODE." "ERROR"
+        throw "DISM failed to mount $wimFilePath to $scratchDir (exit $LASTEXITCODE). The mount directory must exist and remain untouched during the build."
+    }
+
+    # Confirm the mount actually registered; DISM occasionally fails silently.
+    $mountRegistered = @(& dism /English /Get-MountedImageInfo 2>$null) -match [regex]::Escape($scratchDir)
+    if (-not $mountRegistered) {
+        Write-Log "DISM reported success but no mount was registered at $scratchDir." "ERROR"
+        throw "DISM mount was not registered for $scratchDir. Aborting before further operations run against an unmounted path."
+    }
     Write-Log "Filesystem image dynamically linked to workspace."
 }
 
@@ -710,46 +742,164 @@ function Patch-ReAgentXml {
     }
 }
 
-function Create-DesktopAppInstaller {
-    Write-Log "Creating Desktop App Installer script (Install_Essentials.bat)..."
-    
+function Create-DesktopToolsFolder {
+    Write-Log "Creating TejOS-Tools folder (manual installers) on Default User Desktop..."
+
     $desktopPath = "$scratchDir\Users\Default\Desktop"
     if (-not (Test-Path $desktopPath)) {
         New-Item -ItemType Directory -Force -Path $desktopPath | Out-Null
     }
-    
-    $scriptContent = @'
+
+    $toolsPath = "$desktopPath\TejOS-Tools"
+    if (-not (Test-Path $toolsPath)) {
+        New-Item -ItemType Directory -Force -Path $toolsPath | Out-Null
+    }
+
+    # Legacy combined installer from older builds is replaced by this folder
+    Remove-Item -Path "$desktopPath\Install_Essentials.bat" -Force -ErrorAction SilentlyContinue
+    # Older single-purpose scripts are superseded by the current two manual ones
+    Remove-Item -Path "$toolsPath\00-Run-All.bat" -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path "$toolsPath\03-DiskOptimize.bat" -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path "$toolsPath\04-OnlineTweaks.ps1" -Force -ErrorAction SilentlyContinue
+
+    $installBrowserBat = @'
 @echo off
+title TejOS Tools - Browser Installer
 echo ====================================================
-echo      TejOS Nano - Essential Apps Installer
+echo      TejOS Tools - Browser Installer
 echo ====================================================
+echo Choose a browser to download and install:
+echo   [1] Brave
+echo   [2] Mozilla Firefox
+echo   [3] Google Chrome
+echo   [4] Microsoft Edge
+echo   [Q] Quit
 echo.
+:ask
+set "choice="
+set /p "choice=Enter your choice (1-4 or Q): "
+if "%choice%"=="" (
+    echo No input detected. Please enter 1, 2, 3, 4 or Q.
+    goto ask
+)
+if /i "%choice%"=="Q" exit /b
+if "%choice%"=="1" goto brave
+if "%choice%"=="2" goto firefox
+if "%choice%"=="3" goto chrome
+if "%choice%"=="4" goto edge
+echo Invalid choice "%choice%". Please enter 1, 2, 3, 4 or Q.
+goto ask
+
+:brave
 echo Downloading Brave Browser...
 powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://referrals.brave.com/latest/BraveBrowserSetup.exe' -OutFile '%TEMP%\BraveBrowserSetup.exe'"
-if exist "%TEMP%\BraveBrowserSetup.exe" (
-    echo Installing Brave Browser...
-    start /wait "" "%TEMP%\BraveBrowserSetup.exe"
-)
+if exist "%TEMP%\BraveBrowserSetup.exe" ( start /wait "" "%TEMP%\BraveBrowserSetup.exe" ) else ( echo ERROR: Brave download failed. )
+goto ask
 
+:firefox
+echo Downloading Mozilla Firefox...
+powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://download.mozilla.org/?product=firefox-latest&os=win64&lang=en-US' -OutFile '%TEMP%\FirefoxSetup.exe'"
+if exist "%TEMP%\FirefoxSetup.exe" ( start /wait "" "%TEMP%\FirefoxSetup.exe" ) else ( echo ERROR: Firefox download failed. )
+goto ask
+
+:chrome
+echo Downloading Google Chrome...
+powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://dl.google.com/chrome/install/latest/chrome_installer.exe' -OutFile '%TEMP%\ChromeSetup.exe'"
+if exist "%TEMP%\ChromeSetup.exe" ( start /wait "" "%TEMP%\ChromeSetup.exe" ) else ( echo ERROR: Chrome download failed. )
+goto ask
+
+:edge
+echo Downloading Microsoft Edge...
+powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?linkid=2109047&Channel=Stable&language=en' -OutFile '%TEMP%\EdgeSetup.exe'"
+if exist "%TEMP%\EdgeSetup.exe" ( start /wait "" "%TEMP%\EdgeSetup.exe" ) else ( echo ERROR: Edge download failed. )
+goto ask
+'@
+    Set-Content -Path "$toolsPath\01-Install-Browser.bat" -Value $installBrowserBat -Encoding ASCII
+    Write-Log "Created 01-Install-Browser.bat (manual: choose Brave / Firefox / Chrome / Edge)"
+
+    $installDriverBoosterBat = @'
+@echo off
+title TejOS Tools - Install Driver Booster
 echo Downloading IObit Driver Booster...
 powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://cdn.iobit.com/dl/driver_booster_setup.exe' -OutFile '%TEMP%\driver_booster_setup.exe'"
 if exist "%TEMP%\driver_booster_setup.exe" (
     echo Installing Driver Booster...
     start /wait "" "%TEMP%\driver_booster_setup.exe"
+) else (
+    echo ERROR: Driver Booster download failed.
 )
-
-echo.
-echo Installation complete! This script will now self-destruct.
-del "%~f0"
-exit
+pause
 '@
-    
-    $scriptPath = "$desktopPath\Install_Essentials.bat"
-    $scriptContent | Out-File -FilePath $scriptPath -Encoding ASCII -Force
-    Write-Log "Created Install_Essentials.bat on Default User Desktop"
-}
+    Set-Content -Path "$toolsPath\02-Install-DriverBooster.bat" -Value $installDriverBoosterBat -Encoding ASCII
+    Write-Log "Created 02-Install-DriverBooster.bat (manual)"
 
-function Optimize-WinSxS {
+    Write-Log "Staging hidden setup-time scripts (run invisibly as SYSTEM before first logon)..."
+
+    $setupScriptsDir = "$scratchDir\Windows\Setup\Scripts"
+    if (-not (Test-Path $setupScriptsDir)) {
+        New-Item -ItemType Directory -Force -Path $setupScriptsDir | Out-Null
+    }
+
+    $onlinePs1 = @'
+# TejOS live-only operations. Executed by SetupComplete.cmd as SYSTEM before
+# first logon - runs invisibly (no console is shown during this setup phase).
+# Contains ONLY what cannot be baked into the offline image.
+$ErrorActionPreference = 'Continue'
+$logFile = 'C:\Windows\Setup\Scripts\TejOS-Online.log'
+function Log { param([string]$m) Add-Content -Path $logFile -Value ("[{0}] {1}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $m) -Encoding UTF8 }
+
+Log '=== TejOS live-only operations started ==='
+
+# --- Disk optimization (cannot be baked into the image) ---
+Log 'Enabling CompactOS:always (takes a few minutes)...'
+& compact.exe /CompactOS:always | Out-Null
+Log "CompactOS:always exit=$LASTEXITCODE"
+
+Log 'Resizing shadow storage to 0.6GB on C: ...'
+& vssadmin.exe resize shadowstorage /on=C: /for=C: /maxsize=0.6GB | Out-Null
+Log "vssadmin exit=$LASTEXITCODE"
+
+# --- Live-only tweaks (need the real machine: RAM, adapters, live ACLs) ---
+Log 'Setting SvcHostSplitThresholdInKB to total RAM...'
+try {
+    $memoryKb = [int64]((Get-CimInstance Win32_PhysicalMemory | Measure-Object Capacity -Sum).Sum / 1KB)
+    reg.exe add 'HKLM\SYSTEM\CurrentControlSet\Control' /v SvcHostSplitThresholdInKB /t REG_DWORD /d $memoryKb /f | Out-Null
+    Log "SvcHostSplitThresholdInKB = $memoryKb"
+} catch { Log "SvcHostSplitThresholdInKB skipped: $_" }
+
+Log 'Disabling IPv6 on all adapters...'
+try { Disable-NetAdapterBinding -Name * -ComponentID ms_tcpip6 -ErrorAction SilentlyContinue; Log 'Adapter IPv6 binding disabled' } catch { Log "Adapter binding skipped: $_" }
+
+Log 'Disabling Teredo...'
+& netsh.exe interface teredo set state disabled | Out-Null
+
+Log 'Running powercfg /hibernate off (safety: removes hiberfil.sys if present)...'
+& powercfg.exe /hibernate off | Out-Null
+
+Log 'Denying writes to Windows\Installer\Razer...'
+$razerPath = "$Env:SystemRoot\Installer\Razer"
+if (Test-Path $razerPath) { Remove-Item "$razerPath\*" -Recurse -Force -ErrorAction SilentlyContinue } else { New-Item -Path $razerPath -ItemType Directory | Out-Null }
+& icacls.exe $razerPath /deny 'Everyone:(W)' | Out-Null
+
+Log 'Cleaning TEMP folders...'
+Remove-Item -Path "$Env:SystemRoot\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "$Env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+Log '=== TejOS live-only operations finished ==='
+'@
+    Set-Content -Path "$setupScriptsDir\TejOS-Online.ps1" -Value $onlinePs1 -Encoding UTF8
+    Write-Log "Staged TejOS-Online.ps1 (disk optimization + live-only tweaks)"
+
+    $setupCompleteCmd = @'
+@echo off
+rem Runs invisibly as SYSTEM after Windows setup completes, before first logon.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Windows\Setup\Scripts\TejOS-Online.ps1"
+'@
+    Set-Content -Path "$setupScriptsDir\SetupComplete.cmd" -Value $setupCompleteCmd -Encoding ASCII
+    Write-Log "Staged SetupComplete.cmd (hidden trigger for TejOS-Online.ps1)"
+
+    Write-Log "Desktop tools folder ready: $toolsPath (manual installers only; live work runs hidden at setup)"
+}function Optimize-WinSxS {
     Write-Host "`n[WARNING] WinSxS Optimization will take 5-10 minutes...`n" -ForegroundColor Yellow
     Write-Log "Executing hyper-aggressive WinSxS component store shredding..."
 
@@ -1125,9 +1275,9 @@ function Apply-RegistryTweaks {
     Set-RegistryValue 'HKLM\zDEFAULT\Control Panel\Desktop' 'PaintDesktopVersion' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows' 'DisplayNotGenuine' 'REG_DWORD' '0'
 
-    Write-Log "Applying SysInt aggressive telemetry and background service tweaks..."
-    $SysIntServices = @('DiagTrack','SysMain','WSearch','DPS','WdiServiceHost','WdiSystemHost','CDPUserSvc','OneSyncSvc','PimIndexMaintenanceSvc','UserDataSvc','UnistoreSvc','BcastDVRUserService','DoSvc','lfsvc','TabletInputService','RetailDemo','WbioSrvc','SEMgrSvc','PhoneSvc','MapsBroker','icssvc','wisvc','WpcMonSvc','SCardSvr','ScDeviceEnum','SCPolicySvc','AssignedAccessManagerSvc','AJRouter','FrameServer','stisvc','WFDSConMgrSvc','MixedRealityOpenXRSvc','SharedRealitySvc')
-    foreach ($svc in $SysIntServices) {
+    Write-Log "Applying aggressive telemetry and background service tweaks..."
+    $TejServiceList = @('DiagTrack','SysMain','WSearch','DPS','WdiServiceHost','WdiSystemHost','CDPUserSvc','OneSyncSvc','PimIndexMaintenanceSvc','UserDataSvc','UnistoreSvc','BcastDVRUserService','DoSvc','lfsvc','TabletInputService','RetailDemo','WbioSrvc','SEMgrSvc','PhoneSvc','MapsBroker','icssvc','wisvc','WpcMonSvc','SCardSvr','ScDeviceEnum','SCPolicySvc','AssignedAccessManagerSvc','AJRouter','FrameServer','stisvc','WFDSConMgrSvc','MixedRealityOpenXRSvc','SharedRealitySvc')
+    foreach ($svc in $TejServiceList) {
         Set-RegistryValue "HKLM\zSYSTEM\ControlSet001\Services\$svc" 'Start' 'REG_DWORD' '4'
     }
     Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Search' 'AllowCortana' 'REG_DWORD' '0'
@@ -1138,7 +1288,7 @@ function Apply-RegistryTweaks {
     Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' 'legalnoticecaption' 'REG_SZ' 'TejOS Nano'
     Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' 'legalnoticetext' 'REG_SZ' 'This image was built using TejOS Nano Builder. Enjoy your lightweight Windows experience!'
 
-    Write-Log "Applying SysInt winutil tweaks..."
+    Write-Log "Applying TejOS system tweaks..."
     Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\System' 'PublishUserActivities' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\System' 'UploadUserActivities' 'REG_DWORD' '0'
     Set-RegistryValue 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'TaskbarEndTask' 'REG_DWORD' '1'
@@ -1152,6 +1302,57 @@ function Apply-RegistryTweaks {
     Remove-RegistryKey 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace_36354489\{f874310e-b6b7-47dc-bc84-b9e6b38f5903}'
     Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Razer\Synapse3' 'DisableAutoInstall' 'REG_DWORD' '1'
     Set-RegistryValue 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects' 'VisualFXSetting' 'REG_DWORD' '2'
+
+    # --- Offline (image-level) coverage for ticked tweaks and disk optimization ---
+    # Goal: bake every offline-capable value into the image so first boot is already
+    # tweaked; the live 04-OnlineTweaks.ps1 then only fills genuine online gaps.
+    # (Position matters: these run after the telemetry/CDM block and before
+    #  Apply-PerformanceTweaks, so nothing later overwrites them.)
+
+    # Activity History - Disable (complete offline set: was missing EnableActivityFeed)
+    Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\System' 'EnableActivityFeed' 'REG_DWORD' '0'
+
+    # Delivery Optimization - Disable (was missing entirely)
+    Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization' 'DODownloadMode' 'REG_DWORD' '0'
+
+    # Prevent Developer Companion Apps (was missing entirely)
+    Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\Device Metadata' 'PreventDeviceMetadataFromNetwork' 'REG_DWORD' '1'
+
+    # Location Tracking - Disable (was missing SensorPermissionState + Maps AutoUpdateEnabled;
+    # ConsentStore Deny and lfsvc Start=4 already set above)
+    Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Sensor\Overrides\{BFA794E4-F964-4FDB-90F6-51056BFE4B44}' 'SensorPermissionState' 'REG_DWORD' '0'
+    Set-RegistryValue 'HKLM\zSYSTEM\Maps' 'AutoUpdateEnabled' 'REG_DWORD' '0'
+
+    # Services - Set to Manual (was missing CscService / StorSvc / SharedAccess;
+    # DiagTrack Start=4 set above, MapsBroker key removed later by Remove-Services)
+    Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Services\CscService' 'Start' 'REG_DWORD' '4'
+    Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Services\StorSvc' 'Start' 'REG_DWORD' '3'
+    Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Services\SharedAccess' 'Start' 'REG_DWORD' '4'
+
+    # Start Menu Previous Layout - Enable (note: does not work on newer Windows builds;
+    # still recorded for completeness so offline matches the ticked list)
+    Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\3036241548' 'EnabledState' 'REG_DWORD' '1'
+
+    # RDP Unsigned File Warnings - Disable (HKLM half; HKCU half applied live)
+    Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\Client' 'RedirectionWarningDialogVersion' 'REG_DWORD' '1'
+
+    # Hibernation - Disable (offline equivalent of powercfg /hibernate off;
+    # hiberfil.sys will never be created on first boot)
+    Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Control\Session Manager\Power' 'HibernateEnabled' 'REG_DWORD' '0'
+
+    # DISM /Set-ReservedStorageState /Disabled (offline equivalent; already applied at
+    # line ~1414 via ShippedWithReserves, re-set here under the tweak grouping for clarity)
+    Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\ReserveManager' 'ShippedWithReserves' 'REG_DWORD' '0'
+
+    # Note on the remaining offline-capable tweaks:
+    #   - Telemetry: offline halves already applied above (zSOFTWARE DataCollection +
+    #     zNTUSER equivalents); live script re-applies them idempotently.
+    #   - ConsumerFeatures / WPBT / BitLocker(PreventDeviceEncryption) / IPv6(255) /
+    #     Windows AI / Widgets: already applied offline above (AppX + registry).
+    #   - DISM component cleanup: performed offline by Optimize-WindowsImage
+    #     (StartComponentCleanup /ResetBase on the mounted image).
+    #   - CompactOS + vssadmin + SvcHostSplitThresholdInKB: impossible offline,
+    #     handled live by 03-DiskOptimize.bat and 04-OnlineTweaks.ps1.
 
     Write-Log "Offline registry overrides complete."
 }
@@ -1670,7 +1871,7 @@ try {
 
     Remove-Services
 
-    Create-DesktopAppInstaller
+    Create-DesktopToolsFolder
 
     Optimize-WinSxS
 
@@ -1712,5 +1913,6 @@ try {
 
     exit 1
 }
+
 
 
