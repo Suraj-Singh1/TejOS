@@ -1,6 +1,5 @@
 <div align="center">
   <img src="TejOS_Logo_rect-no-bg.png" alt="TejOS Logo" width="360" />
-  <h1>🚀 TejOS</h1>
   <p><b>Automated Lightweight Windows 11 Custom ISO Builder</b></p>
   <p><i>Windows 11 Debloat • TPM 2.0 & Secure Boot Bypass • Bloatware Removal • Zero-Touch Unattended Install</i></p>
   <p><b>An open-source tiny11 alternative — built with PowerShell + DISM</b></p>
@@ -15,6 +14,7 @@
   </p>
   <p><sub>Questions, hardware reports, or suggestions for what TejOS should support next? Drop them in the group.</sub></p>
 </div>
+<h1>🚀 TejOS</h1>
 
 ---
 
