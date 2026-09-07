@@ -270,14 +270,14 @@ When finished, `TejOS-Nano.iso` and `TejOS-Nano-buildinfo.json` are written into
 
 ### Command-Line Parameters
 
-| Parameter | What it does |
-| : | : |
+| **Parameter** | **What it does** |
+| :--- | :--- |
 | `-ISO <DriveLetter>` | Tells the script which mounted drive holds the source ISO (e.g. `-ISO H`). Omit it and you must mount manually. |
-| `-INDEX <number>` | Pre-select the Windows edition index (e.g. `-INDEX 6` for Pro) and skip the interactive prompt. |
+| `-INDEX <number>` | Pre-selects the Windows edition index (e.g. `-INDEX 6` for Pro) and skips the interactive prompt. |
 | `-PreserveWinRE` | Keeps the Windows Recovery Environment (deleted by default to save space). Use this if you want recovery and troubleshooting tools. |
-| `-ESD` | Activates LZMS solid compression at the end of the build — ISO shrinks significantly, at the cost of heavy CPU usage and up to 12 GB of RAM. |
-| `-SCRATCH <DriveLetter>` | Use a different scratch disk than the script folder (e.g. `-SCRATCH D`). |
-| `-SkipCleanup` | Leave temporary build files behind for debugging. |
+| `-ESD` | Activates LZMS solid compression at the end of the build — the ISO shrinks significantly, at the cost of heavy CPU usage and up to 12 GB of RAM. |
+| `-SCRATCH <DriveLetter>` | Uses a different scratch disk than the script folder (e.g. `-SCRATCH D`). |
+| `-SkipCleanup` | Leaves temporary build files behind for debugging. |
 
 The currently validated reference build (Insider 29648.1000) was produced using both `-PreserveWinRE` and `-ESD`:
 
@@ -341,18 +341,18 @@ The currently validated reference build (Insider 29648.1000) was produced using 
 
 ## 🆚 How Does TejOS Compare? (vs. tiny11builder & Prebuilt Lite ISOs)
 
-| | **TejOS** | tiny11builder | Prebuilt "Lite ISO" sites |
-| : | : | : | : |
-| Method | Offline ISO build (PowerShell + DISM) | Offline ISO build | Unknown |
-| Uses your own official ISO | ✅ required | ✅ required | ❌ unknown provenance |
-| TPM/Secure Boot bypass baked into the image | ✅ | ✅ | varies |
-| Fully unattended install | ✅ via `autounattend.xml` | ❌ | varies |
-| ESD compression option | ✅ | ✅ (recent versions) | varies |
-| Hidden first-boot optimization (CompactOS etc.) | ✅ | ❌ | varies |
-| Desktop toolkit (browser/driver installers) | ✅ | ❌ | varies |
-| Multiple tiers | 4 | 1 (plus Core variant) | — |
-| WinSxS aggressively stripped (non-serviceable) | ✅ (Nano only) | ✅ (Core only) | varies |
-| Built against | Bleeding-edge Insider Preview (29648.1000) | Stable channel releases | Unknown |
+| **Feature** | **TejOS** | **tiny11builder** | **Prebuilt "Lite ISO" sites** |
+| :--- | :--- | :--- | :--- |
+| **Method** | Offline ISO build (PowerShell + DISM) | Offline ISO build | Unknown |
+| **Uses your own official ISO** | ✅ Required | ✅ Required | ❌ Unknown provenance |
+| **TPM/Secure Boot bypass baked into the image** | ✅ | ✅ | Varies |
+| **Fully unattended install** | ✅ via `autounattend.xml` | ❌ | Varies |
+| **ESD compression option** | ✅ | ✅ (recent versions) | Varies |
+| **Hidden first-boot optimization (CompactOS, etc.)** | ✅ | ❌ | Varies |
+| **Desktop toolkit (browser/driver installers)** | ✅ | ❌ | Varies |
+| **Multiple tiers** | 4 | 1 (plus Core variant) | — |
+| **WinSxS aggressively stripped (non-serviceable)** | ✅ (Nano only) | ✅ (Core only) | Varies |
+| **Built against** | Bleeding-edge Insider Preview (29648.1000) | Stable channel releases | Unknown |
 
 *tiny11builder is excellent and directly inspired TejOS — see the full list of credits below. This table is about fit, not superiority: tiny11 is built and tested against stable channel releases, and in our own testing it ran into problems on Insider Preview 29648.1000 — the bleeding-edge channel TejOS is specifically built for.*
 
