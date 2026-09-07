@@ -16,8 +16,6 @@
   <h1>🚀 TejOS</h1>
 </div>
 
----
-
 ## 🌟 What Is TejOS?
 
 **TejOS is a fully automated PowerShell script that builds a debloated, optimized, lightweight Windows 11 custom ISO from Microsoft's official installation media.** If you've been searching for a **tiny11 alternative**, a **Windows 11 debloater**, or a way to build your own **Windows 11 lite ISO** without downloading a mystery file from a random site, this is that tool.
