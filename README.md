@@ -45,7 +45,7 @@ The output: an ultra-light **~2.7 GB Windows 11 ISO** (with ESD compression) tha
 ## 📊 The Four Tiers of TejOS
 
 | Version | Target Audience | What It Does | Status |
-| : | : | : | : |
+| :--- | :--- | :--- | :--- |
 | **TejOS Full** | General users | Removes heavy telemetry & tracking; keeps Defender, Edge, Store, and Windows Update intact. | *Coming soon* |
 | **TejOS Lite** | Gamers & power users | Removes Edge and OneDrive, trims background services, keeps Windows Update functional. | *Coming soon* |
 | **TejOS Nano** | **Old hardware & VMs** | **The Shredder. Aggressively strips WinSxS, removes Windows Update/Defender entirely, bypasses all hardware checks.** | **🟢 Available now!** |
