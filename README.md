@@ -377,8 +377,6 @@ Yes — the built-in `autounattend.xml` creates a local administrator account an
 **Q: Will Rufus's "customize Windows installation" options break TejOS?**
 Yes, if you check them. TejOS already bakes in the TPM/RAM bypass, local account, and OOBE skip. Checking Rufus's equivalent options applies a second answer file that can conflict with TejOS's — leave the Rufus customization dialog completely unchecked.
 
-**Q: What runs invisibly on first boot?**
-A hidden SYSTEM script (`SetupComplete.cmd` → `TejOS-Online.ps1` inside the image) runs before your first logon and silently performs the live-only work that cannot be baked into an offline image: `CompactOS:always` compression, shadow storage resize to 0.6 GB, IPv6 adapter disable, Teredo off, hibernate off, Razer auto-install block, and temp cleanup. Log: `C:\Windows\Setup\Scripts\TejOS-Online.log`.
 
 **Q: What is the TejOS-Tools folder on my desktop?**
 A small toolkit TejOS places on every new user's desktop: `01-Install-Browser.bat` (pick Brave / Firefox / Chrome / Edge) and `02-Install-DriverBooster.bat` (driver scan/install). Run them manually after you connect to the internet.
