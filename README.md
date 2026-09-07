@@ -13,8 +13,8 @@
     <a href="https://t.me/TejOS11"><img src="https://img.shields.io/badge/Telegram-Join%20the%20Community-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram Group" /></a>
   </p>
   <p><sub>Questions, hardware reports, or suggestions for what TejOS should support next? Drop them in the group.</sub></p>
+  <h1>🚀 TejOS</h1>
 </div>
-<h1>🚀 TejOS</h1>
 
 ---
 
