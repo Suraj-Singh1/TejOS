@@ -26,7 +26,7 @@ The output: an ultra-light **~2.7 GB Windows 11 ISO** (with ESD compression) tha
 
 > ⚠️ **Never download prebuilt "Windows 11 Lite ISO" files from random websites.** They are unofficial, unauditable, and a common malware vector. TejOS builds the same result **from your own official Microsoft ISO** — every line of the build is open source and runs 100% offline on your machine.
 
----
+
 
 ## ⚡ Key Features
 
@@ -40,18 +40,18 @@ The output: an ultra-light **~2.7 GB Windows 11 ISO** (with ESD compression) tha
 - 🧰 **100% offline, 100% open source** — PowerShell + DISM only; no binaries shipped, nothing downloaded, nothing uploaded
 - 🎚️ **Four tiers** — from safe (Full) to surgical (Nano) to extreme (Micro)
 
----
+
 
 ## 📊 The Four Tiers of TejOS
 
 | Version | Target Audience | What It Does | Status |
-| :--- | :--- | :--- | :--- |
+| : | : | : | : |
 | **TejOS Full** | General users | Removes heavy telemetry & tracking; keeps Defender, Edge, Store, and Windows Update intact. | *Coming soon* |
 | **TejOS Lite** | Gamers & power users | Removes Edge and OneDrive, trims background services, keeps Windows Update functional. | *Coming soon* |
 | **TejOS Nano** | **Old hardware & VMs** | **The Shredder. Aggressively strips WinSxS, removes Windows Update/Defender entirely, bypasses all hardware checks.** | **🟢 Available now!** |
 | **TejOS Micro** | Kiosks & retro builds | Maximum strip-down: removes the network stack and print spooler. Tiny RAM footprint. | *Coming soon* |
 
----
+
 
 ## 🔮 Tested on the Cutting Edge: Windows 11 Insider Preview
 
@@ -59,7 +59,7 @@ The current TejOS Nano release was built and validated specifically against **Wi
 
 Which version(s) TejOS supports next isn't locked in yet. Rather than guess, we're going by what the community actually wants and reports back — so if you try Nano against a different ISO (working or not), or have an opinion on what should be supported next, share it in the [Telegram group](https://t.me/TejOS11). Future tiers and version support will be shaped by that feedback.
 
----
+
 
 ## ⚡ TejOS Nano: What Works & What Doesn't
 
@@ -81,7 +81,7 @@ To keep the ISO tiny, Nano slims the Microsoft Driver Store down to essential un
 - **Fact:** even a completely unmodified official Windows 11 ISO offers no guarantee that your specific hardware drivers work immediately after install.
 - **The fix:** after installing TejOS, run the Driver Booster installer from the `TejOS-Tools` folder on your desktop, or download drivers from your motherboard/laptop manufacturer (see "After Installation" below).
 
----
+
 
 ## 📋 Requirements
 
@@ -91,7 +91,7 @@ To keep the ISO tiny, Nano slims the Microsoft Driver Store down to essential un
 - A USB stick (8 GB+) and [Rufus](https://rufus.ie/)
 - ⚠️ **Antivirus temporarily disabled or the project folder excluded** — see Step 1 below. Antivirus engines aggressively lock the temporary WIM files during the build process, which crashes the script.
 
----
+
 
 ## 📥 How to Get TejOS (Download)
 
@@ -124,14 +124,14 @@ You don't compile anything — TejOS is a folder of PowerShell scripts. Grab it 
 
 > 🆘 **Stuck or in doubt at any step?** Ask in the [Telegram group](https://t.me/TejOS11) — the fastest way to get an answer — or [open a GitHub Issue](https://github.com/Suraj-Singh1/TejOS/issues) and attach the build log (`TejOS-Nano-*.log`, found next to the build script). No question is too basic — this project is written for beginners.
 
----
+
 
 ## 🛠️ Build Your Custom Windows 11 ISO (Complete Beginner Walkthrough)
 
 > 💡 **Total time:** roughly 30–90 minutes depending on your PC and whether you use `-ESD`.
 > The steps below assume you are starting from scratch. Don't skip Step 1 — it is the #1 cause of failed builds.
 
----
+
 
 ### Step 1 — Prepare your PC: antivirus exclusions (or disable protection temporarily)
 
@@ -163,7 +163,7 @@ Windows Defender (or a third-party antivirus) will fight the script while it wor
 
 > 💡 The build script also tries to add the exclusions for you automatically at startup — but if Windows Security blocks that, the manual steps above are the reliable way.
 
----
+
 
 ### Step 2 — Download the official Windows 11 ISO (Insider Preview)
 
@@ -177,7 +177,7 @@ The validated build is **Windows 11 Insider Preview build 29648.1000**.
 
 > ⚠️ Only use the **official Microsoft download page** (links above). Never download "Windows 11 Lite/Insider" ISOs from file-sharing or third-party sites.
 
----
+
 
 ### Step 3 — Mount the ISO and note the drive letter
 
@@ -187,7 +187,7 @@ The validated build is **Windows 11 Insider Preview build 29648.1000**.
 
 > 💡 Alternative (PowerShell): open any PowerShell window and run `Mount-DiskImage -ImagePath "$env:USERPROFILE\Downloads\Windows11_InsiderPreview_Client_x64_en-us_29648.iso"` — then check *This PC* for the new drive letter.
 
----
+
 
 ### Step 4 — Open PowerShell as Administrator
 
@@ -198,7 +198,7 @@ The validated build is **Windows 11 Insider Preview build 29648.1000**.
 
 > 💡 Shortcut: right-click the **Start** button (or press `Win + X`) → click **Terminal (Admin)** or **Windows PowerShell (Admin)**.
 
----
+
 
 ### Step 5 — Enter the TejOS project folder
 
@@ -210,7 +210,7 @@ cd "C:\TejOS"
 
 > 💡 Your folder may be somewhere else (e.g. `C:\Users\<YourName>\Downloads\TejOS-main`) — use that real path instead. To paste a path into PowerShell, just **right-click** inside the window (or press `Ctrl + V` in Windows Terminal).
 
----
+
 
 ### Step 6 — Allow the script to run
 
@@ -222,7 +222,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 
 > 🔒 `-Scope Process` means this only applies to the current PowerShell window — it reverts the moment you close it and never touches your system-wide execution policy.
 
----
+
 
 ### Step 7 — Run the builder
 
@@ -245,7 +245,7 @@ Enter the index number:
 
 Type the number of the edition you want and press `Enter`. If you press `Enter` without typing anything (or type an invalid number), the script politely asks again — it will never crash or exit on a bad answer.
 
----
+
 
 ### Step 8 — Wait (and what to expect)
 
@@ -266,12 +266,12 @@ When finished, `TejOS-Nano.iso` and `TejOS-Nano-buildinfo.json` are written into
 - 🔴 **Harmless red errors (2–5 of them):** a specific minor component was already removed or doesn't exist in your ISO. The script skips past them safely and continues.
 - 🧊 **Frozen-looking console:** Windows "QuickEdit Mode" pauses the script if you accidentally click inside the window. Click once inside the PowerShell window and **press the `Enter` key** to resume.
 
----
+
 
 ### Command-Line Parameters
 
 | Parameter | What it does |
-| :--- | :--- |
+| : | : |
 | `-ISO <DriveLetter>` | Tells the script which mounted drive holds the source ISO (e.g. `-ISO H`). Omit it and you must mount manually. |
 | `-INDEX <number>` | Pre-select the Windows edition index (e.g. `-INDEX 6` for Pro) and skip the interactive prompt. |
 | `-PreserveWinRE` | Keeps the Windows Recovery Environment (deleted by default to save space). Use this if you want recovery and troubleshooting tools. |
@@ -285,7 +285,7 @@ The currently validated reference build (Insider 29648.1000) was produced using 
 .\Build_TejOS-Nano.ps1 -ISO H -PreserveWinRE -ESD
 ```
 
----
+
 
 ## 💾 Prepare the Bootable USB Drive (Rufus)
 
@@ -299,7 +299,7 @@ The currently validated reference build (Insider 29648.1000) was produced using 
 5. ⚠️ **When the "Windows User Experience" customization dialog appears — DO NOT check anything.** Just click **OK**. Rufus offers things like "Remove requirement for 4GB RAM / Secure Boot / TPM", "Set local account name", etc. **TejOS already bakes all of that into the image.** Checking them a second time can break the unattended installation.
 6. Wait for Rufus to finish (a few minutes), then safely eject the USB.
 
----
+
 
 ## 🚀 After Installation — What to Do Next
 
@@ -337,12 +337,12 @@ The currently validated reference build (Insider 29648.1000) was produced using 
 ### 6. Remember: no Windows Update
 - Nano is non-serviceable by design. When you want a newer Windows build, build a fresh TejOS ISO and reinstall — that's the honest trade for the tiny footprint.
 
----
+
 
 ## 🆚 How Does TejOS Compare? (vs. tiny11builder & Prebuilt Lite ISOs)
 
 | | **TejOS** | tiny11builder | Prebuilt "Lite ISO" sites |
-| :--- | :--- | :--- | :--- |
+| : | : | : | : |
 | Method | Offline ISO build (PowerShell + DISM) | Offline ISO build | Unknown |
 | Uses your own official ISO | ✅ required | ✅ required | ❌ unknown provenance |
 | TPM/Secure Boot bypass baked into the image | ✅ | ✅ | varies |
@@ -356,7 +356,7 @@ The currently validated reference build (Insider 29648.1000) was produced using 
 
 *tiny11builder is excellent and directly inspired TejOS — see the full list of credits below. This table is about fit, not superiority: tiny11 is built and tested against stable channel releases, and in our own testing it ran into problems on Insider Preview 29648.1000 — the bleeding-edge channel TejOS is specifically built for.*
 
----
+
 
 ## ❓ FAQ
 
@@ -397,7 +397,7 @@ For personal use, yes. TejOS only modifies a copy of Windows 11 you already down
 **Q: Is TejOS safe?**
 No binaries ship with TejOS. It is a readable PowerShell script that processes *your* Microsoft ISO, offline, on your machine — no downloads, no uploads, no telemetry of its own.
 
----
+
 
 ## ⭐ Support This Project
 
@@ -421,7 +421,7 @@ Please go star their repositories!
 
 *TejOS is an independent, unofficial project and is not affiliated with or endorsed by Microsoft. Use it with your own properly licensed Windows ISO.*
 
----
+
 
 <div align="center">
   <img src="TejOS_Logo_rect-no-bg.png" alt="TejOS Logo" width="180" />
